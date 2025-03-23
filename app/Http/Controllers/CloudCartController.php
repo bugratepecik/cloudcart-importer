@@ -31,7 +31,7 @@ class CloudCartController extends Controller
         return $this->processCsv(Storage::path($path));
     }
 
-    private function processCsv($filePath)
+    public function processCsv($filePath)
     {
         $handle = fopen($filePath, 'r');
         if ($handle === false) {
@@ -49,5 +49,30 @@ class CloudCartController extends Controller
 
         // API çağrısı yerine dd() ile kontrol edelim
         return dd($products);
+
+        /*
+  foreach ($products as $product) {
+      $response = Http::withHeaders([
+          'Accept'        => 'application/vnd.api+json',
+          'Content-Type'  => 'application/vnd.api+json',
+          'X-CloudCart-ApiKey' => env('CLOUDCART_API_KEY'),
+          'Authorization' => 'Bearer ' . env('CLOUDCART_BEARER_TOKEN'),
+      ])->post('https://lkziv.cloudcart.net/api/v2/products', [
+          'data' => [
+              'type' => 'products',
+              'attributes' => [
+                  'name' => $product['name'] ?? '',
+                  'sku' => $product['sku'] ?? '',
+                  'price' => $product['price'] ?? 0,
+                  'quantity' => $product['quantity'] ?? 0,
+              ]
+          ]
+      ]);
+
+      Log::info('CloudCart API Response:', $response->json());
+  }
+  */
+
+        // return response()->json(['message' => 'Ürünler başarıyla işlendi.']);
     }
 }

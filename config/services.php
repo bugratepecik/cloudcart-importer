@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'cloudcart' => [
+        'api_key' => env('CLOUDCART_API_KEY'),
+        'bearer_token' => env('CLOUDCART_BEARER_TOKEN'),
+    ],
+
 ];
