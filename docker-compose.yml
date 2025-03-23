@@ -36,6 +36,7 @@ services:
             - pg_data:/var/lib/postgresql/data
         networks:
             - cloudcart_network
+
     phpmyadmin:
         image: dpage/pgadmin4
         container_name: cloudcart_pgadmin
