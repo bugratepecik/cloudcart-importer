@@ -41,13 +41,23 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         let results = @json(session('upload_results'));
 
         if (results && results.responses) {
             results.responses.forEach(result => {
-                showToast(result.product_name, result.status_code === 201 ? "Başarıyla eklendi!" : "Hata oluştu!", result.status_code === 201 ? "success" : "danger", result.status_code);
+                let message = result.status_code === 201
+                    ? "Başarıyla eklendi!"
+                    : (result.error_message ? result.error_message : "Veritabanına eklenemedi!");
+
+                showToast(
+                    result.product_name,
+                    message,
+                    result.status_code === 201 ? "success" : "danger",
+                    result.status_code
+                );
             });
         }
     });
@@ -59,7 +69,7 @@
             <div class="toast align-items-center mt-sm-1 text-white bg-${type} border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="d-flex">
                     <div class="toast-body">
-                      ${status_code} - <strong>${title}</strong> -  ${message}
+                    ${status_code} - <strong>${title}</strong> - ${message}
                     </div>
                     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
@@ -77,4 +87,5 @@
         }, 10000);
     }
 </script>
+
 </html>

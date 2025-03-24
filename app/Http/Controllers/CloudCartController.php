@@ -27,7 +27,7 @@ class CloudCartController extends Controller
         $response = $this->processCsvApi(Storage::path($path));
 
         // Başarı ve hata mesajlarını session'a kaydet
-        session()->flash('upload_results', $response->getData(true));
+        session()->flash('upload_results', json_decode($response->getContent(), true));
 
         return redirect()->back();
     }
@@ -36,18 +36,32 @@ class CloudCartController extends Controller
     {
         $handle = fopen($filePath, 'r');
         if ($handle === false) {
-            return response()->json(['error' => 'CSV dosyası açılamadı.'], 500);
+            return response()->json([
+                'responses' => [['product_name' => 'CSV Yükleme', 'status_code' => 500, 'message' => 'CSV dosyası açılamadı.']]
+            ], 500);
         }
 
         $header = fgetcsv($handle);
         $responses = [];
 
         while (($row = fgetcsv($handle)) !== false) {
+
             $productData = array_combine($header, $row);
+            $sku = $productData['sku'] ?? '';
+
+            if (Product::where('sku', $sku)->exists()) {
+                $responses[] = [
+                    'product_name' => $productData['name'] ?? 'Unknown',
+                    'status_code' => 400,
+                    'message' => "SKU ({$sku}) zaten mevcut!"
+                ];
+                continue;
+            }
+
+            // Kategori kontrolü
 
             $categoryName = !empty($productData['category']) ? $productData['category'] : 'Default Category';
 
-            // CloudCart'taki kategorileri al
             $categoryResponse = Http::withHeaders([
                 'Accept' => 'application/vnd.api+json',
                 'Content-Type' => 'application/vnd.api+json',
@@ -71,6 +85,14 @@ class CloudCartController extends Controller
                         'attributes' => ['name' => $categoryName]
                     ]
                 ]);
+                 if (!$categoryCreateResponse->successful()) {
+                    $responses[] = [
+                        'product_name' => $productData['name'] ?? 'Unknown',
+                        'status_code' => 500,
+                        'message' => "Kategori oluşturulamadı: {$categoryName}"
+                    ];
+                    continue;
+                 }
 
                 $categoryData = $categoryCreateResponse->json();
                 $defaultCategoryId = $categoryData['data']['id'] ?? null; // Yeni oluşturulan kategorinin ID'sini al
@@ -80,20 +102,34 @@ class CloudCartController extends Controller
 
 // Eğer ID belirlenemediyse, varsayılan bir ID kullan
             if (!$defaultCategoryId) {
-                return response()->json(['error' => 'Kategori ID alınamadı.'], 500);
+                $responses[] = [
+                    'product_name' => $productData['name'] ?? 'Unknown',
+                    'status_code' => 500,
+                    'message' => "Kategori ID alınamadı."
+                ];
+                continue;
             }
 
-            // Ürünü veritabanına kaydet
-            $product = Product::create([
-                'name' => $productData['name'] ?? '',
-                'sku' => $productData['sku'] ?? '',
-                'price' => $productData['price'] ?? 0,
-                'quantity' => $productData['quantity'] ?? 0,
-                'brand' => $productData['brand'] ?? '',
-                'category' => $categoryName,
-                'description' => $productData['description'] ?? '',
-                'image_url' => $productData['image_url'] ?? ''
-            ]);
+            // veritabanına kayıt
+            try {
+                $product = Product::create([
+                    'name' => $productData['name'] ?? '',
+                    'sku' => $sku,
+                    'price' => $productData['price'] ?? 0,
+                    'quantity' => $productData['quantity'] ?? 0,
+                    'brand' => $productData['brand'] ?? '',
+                    'category' => $categoryName,
+                    'description' => $productData['description'] ?? '',
+                    'image_url' => $productData['image_url'] ?? ''
+                ]);
+            } catch (\Exception $e) {
+                $responses[] = [
+                    'product_name' => $productData['name'] ?? 'Unknown',
+                    'status_code' => 500,
+                    'message' => "Veritabanı hatası: SKU ({$sku}) eklenemedi."
+                ];
+                continue;
+            }
 
             // CloudCart API için formatı ayarla
             $payload = [
@@ -132,7 +168,8 @@ class CloudCartController extends Controller
             $responses[] = [
                 'product_name' => $productData['name'] ?? 'Unknown',
                 'status_code' => $statusCode,
-                'response_data' => $responseData
+                'response_data' => $responseData,
+                'message' => $statusCode === 201 ? "Başarıyla eklendi!" : "API hatası!",
             ];
 
             // API Logları Kaydet
@@ -148,7 +185,6 @@ class CloudCartController extends Controller
         fclose($handle);
 
         return response()->json([
-            'message' => 'Ürünler işlendi ve database e kayıt edildi aynı zamanda CloudCart API\'ye gönderildi.',
             'responses' => $responses,
         ]);
     }
