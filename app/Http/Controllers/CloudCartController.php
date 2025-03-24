@@ -24,7 +24,12 @@ class CloudCartController extends Controller
         $file = $request->file('csv_file');
         $path = $file->storeAs('csv_uploads', $file->getClientOriginalName());
 
-        return $this->processCsvApi(Storage::path($path));
+        $response = $this->processCsvApi(Storage::path($path));
+
+        // Başarı ve hata mesajlarını session'a kaydet
+        session()->flash('upload_results', $response->getData(true));
+
+        return redirect()->back();
     }
 
     public function processCsvApi($filePath)

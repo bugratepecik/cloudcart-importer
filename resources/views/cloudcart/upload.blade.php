@@ -6,8 +6,7 @@
     <title>CSV Yükleme</title>
     <!-- Bootstrap CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- SweetAlert CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 <body>
 
@@ -36,20 +35,46 @@
     </div>
     <!-- Kart Bitişi -->
 </div>
-
-<!-- SweetAlert Kullanımı -->
-<script>
-    @if(session('success'))
-    Swal.fire({
-        title: 'Başarılı!',
-        text: '{{ session('success') }}',
-        icon: 'success',
-        confirmButtonText: 'Tamam'
-    });
-    @endif
-</script>
+<div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
 
 <!-- Bootstrap ve SweetAlert Scriptleri -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let results = @json(session('upload_results'));
+
+        if (results && results.responses) {
+            results.responses.forEach(result => {
+                showToast(result.product_name, result.status_code === 201 ? "Başarıyla eklendi!" : "Hata oluştu!", result.status_code === 201 ? "success" : "danger", result.status_code);
+            });
+        }
+    });
+
+    function showToast(title, message, type, status_code) {
+        let toastContainer = document.getElementById("toastContainer");
+
+        let toastHTML = `
+            <div class="toast align-items-center mt-sm-1 text-white bg-${type} border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                      ${status_code} - <strong>${title}</strong> -  ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>`;
+
+        let toastElement = document.createElement("div");
+        toastElement.innerHTML = toastHTML;
+        toastContainer.appendChild(toastElement);
+
+        let toast = new bootstrap.Toast(toastElement.querySelector(".toast"));
+        toast.show();
+
+        setTimeout(() => {
+            toastElement.remove();
+        }, 10000);
+    }
+</script>
 </html>
