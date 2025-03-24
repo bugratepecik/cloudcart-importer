@@ -1,0 +1,5 @@
+name,sku,price,quantity,brand,category,tags,description,image_url,variant_1_name,variant_1_value,variant_2_name,variant_2_value
+Men's Cotton T-Shirt,TSHIRT001,19.99,120,Hanes,Clothing,"tshirt,cotton,men","100% cotton T-shirt, breathable fabric","https://example.com/images/tshirt1.jpg",Size,M,Color,Black
+Women's Running Shoes,SHOE002,49.95,75,Nike,Shoes,"running,women,sneakers","Lightweight and comfortable running shoes for women","https://example.com/images/shoe2.jpg",Size,38,Color,Pink
+Bluetooth Headphones,BT003,89.90,45,Sony,Electronics,"headphones,bluetooth,sound","Noise-cancelling over-ear headphones with 20h battery","https://example.com/images/headphones3.jpg",Color,Black,, 
+Yoga Mat,YOGA004,25.00,200,Adidas,Sports,"yoga,mat,fitness","Eco-friendly non-slip yoga mat for daily use","https://example.com/images/yogamat4.jpg",Thickness,5mm,Color,Blue

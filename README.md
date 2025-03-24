@@ -84,7 +84,7 @@ To inspect log records and the product database:
 - Check the `products` table to verify the imported data.
 
 ### 3. Example CSV Format
-Make sure your CSV file follows this format:
+Make sure your CSV file follows this format. You can find the example CSV file inside the `storage` directory:
 
 ```csv
 name,sku,price,quantity,brand,category,tags,description,image_url,variant_1_name,variant_1_value,variant_2_name,variant_2_value
